@@ -1,0 +1,11 @@
+# Patterns match target paths, not source paths.
+# Keep repository docs/bootstrap files outside the applied home tree.
+README.md
+MAC_SERVER.md
+install.sh
+
+# Local app configs that may contain credentials or machine-local state.
+.config/opencode
+.config/opencode/**
+.config/last30days
+.config/last30days/**

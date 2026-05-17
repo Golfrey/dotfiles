@@ -14,8 +14,8 @@ dot_ssh/
 private_dot_ssh/
 
 # App configs that currently contain credentials or local state.
-dot_config/opencode/
-dot_config/last30days/
+**/dot_config/opencode/
+**/dot_config/last30days/
 
 # Dependencies and generated caches do not belong in dotfiles.
 **/node_modules/

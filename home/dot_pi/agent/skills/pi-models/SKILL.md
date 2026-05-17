@@ -25,7 +25,7 @@ This skill includes a zero-dependency helper script:
 When using it from the agent, resolve the path relative to this skill directory. In this chezmoi repo that is usually:
 
 ```bash
-python3 dot_pi/agent/skills/pi-models/scripts/pi-models.py <command>
+python3 home/dot_pi/agent/skills/pi-models/scripts/pi-models.py <command>
 ```
 
 After chezmoi applies the dotfiles, the installed skill path is usually:

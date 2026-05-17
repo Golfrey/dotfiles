@@ -2,6 +2,17 @@
 
 Managed with [chezmoi](https://www.chezmoi.io/).
 
+## Repository layout
+
+This repo uses `.chezmoiroot`:
+
+```text
+.chezmoiroot  -> home
+```
+
+The chezmoi source state lives under `home/`, mirroring files that should be applied into `$HOME`.
+Top-level files such as `README.md`, `MAC_SERVER.md`, and `install.sh` are repository/bootstrap files and are not applied to `$HOME`.
+
 ## Daily workflow
 
 ```sh
@@ -40,22 +51,37 @@ git status
 brew install chezmoi
 ```
 
+Or let `install.sh` install chezmoi into `~/.local/bin` if it is missing.
+
 ### 3. Init this repo
 
-Interactive setup:
+Direct chezmoi init over SSH:
 
 ```sh
-chezmoi init <repo-url>
+chezmoi init git@github.com:Golfrey/dotfiles.git --promptChoice profile=personal
+chezmoi init git@github.com:Golfrey/dotfiles.git --promptChoice profile=server
 ```
 
-Non-interactive setup:
+If SSH keys are not set up and the repo is accessible over HTTPS:
 
 ```sh
-chezmoi init <repo-url> --promptChoice profile=personal
-chezmoi init <repo-url> --promptChoice profile=server
+chezmoi init https://github.com/Golfrey/dotfiles.git --promptChoice profile=server
 ```
 
-The profile is stored in the machine-local chezmoi config generated from `.chezmoi.toml.tmpl`.
+Alternatively, clone the repo and run the bootstrap script from the checkout:
+
+```sh
+git clone git@github.com:Golfrey/dotfiles.git ~/.local/share/chezmoi
+CHEZMOI_PROFILE=server ~/.local/share/chezmoi/install.sh
+```
+
+`install.sh` intentionally runs `chezmoi init` without applying by default, so you can review the diff first. To apply immediately, pass `--apply`:
+
+```sh
+CHEZMOI_PROFILE=server ~/.local/share/chezmoi/install.sh --apply
+```
+
+The profile is stored in the machine-local chezmoi config generated from `home/.chezmoi.toml.tmpl`.
 
 Profiles:
 
@@ -88,23 +114,23 @@ chezmoi apply
 brew bundle --global
 ```
 
-`dot_Brewfile.tmpl` renders to `~/.Brewfile`. Homebrew Bundle then installs packages from that file.
+`home/dot_Brewfile.tmpl` renders to `~/.Brewfile`. Homebrew Bundle then installs packages from that file.
 
 ## Homebrew packages
 
 The global Homebrew bundle is managed by:
 
 ```text
-dot_Brewfile.tmpl
+home/dot_Brewfile.tmpl
 ```
 
-After installing a new Homebrew package manually, add it to `dot_Brewfile.tmpl` so new machines get it too.
+After installing a new Homebrew package manually, add it to `home/dot_Brewfile.tmpl` so new machines get it too.
 
 Render/test the Brewfile for a profile:
 
 ```sh
 printf '{"profile":"personal"}' >/tmp/chezmoi-data.json
-chezmoi execute-template --override-data-file /tmp/chezmoi-data.json < dot_Brewfile.tmpl
+chezmoi execute-template --override-data-file /tmp/chezmoi-data.json < home/dot_Brewfile.tmpl
 ```
 
 ## Externals
@@ -112,7 +138,7 @@ chezmoi execute-template --override-data-file /tmp/chezmoi-data.json < dot_Brewf
 Oh My Zsh and Powerlevel10k are managed by chezmoi externals in:
 
 ```text
-.chezmoiexternal.toml
+home/.chezmoiexternal.toml
 ```
 
 They refresh weekly:
@@ -132,7 +158,7 @@ chezmoi apply --refresh-externals=always
 Pi model config is managed in:
 
 ```text
-dot_pi/agent/models.json.tmpl
+home/dot_pi/agent/models.json.tmpl
 ```
 
 It uses the MagicDNS host:

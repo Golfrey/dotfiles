@@ -1,5 +1,5 @@
 # Homebrew bundle for setting up a new Mac.
-# Managed by chezmoi from dot_Brewfile.tmpl.
+# Managed by chezmoi from home/dot_Brewfile.tmpl.
 # Apply with: brew bundle --global
 
 {{ $profile := get . "profile" | default "personal" -}}
@@ -14,6 +14,7 @@ tap "homebrew/bundle"
 brew "bitwarden-cli"
 
 # Core CLI tools, useful on every machine
+brew "atuin"
 brew "bat"
 brew "curl"
 brew "eza"

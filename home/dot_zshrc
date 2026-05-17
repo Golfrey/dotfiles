@@ -79,6 +79,9 @@ zstyle ':omz:update' mode disabled  # disabled; managed by chezmoi
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(git zoxide)
 
+# Keep Oh My Zsh runtime caches outside the managed ~/.oh-my-zsh external.
+export ZSH_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/oh-my-zsh"
+
 source $ZSH/oh-my-zsh.sh
 
 # User configuration

@@ -5,7 +5,7 @@ This note covers the manual steps for setting up a Mac mini as an always-on serv
 The automated baseline is in:
 
 ```text
-run_once_after_configure-macos-server.sh.tmpl
+home/run_once_after_configure-macos-server.sh.tmpl
 ```
 
 It runs only when the chezmoi profile is `server`.
@@ -15,13 +15,26 @@ It runs only when the chezmoi profile is `server`.
 On the Mac mini:
 
 ```sh
-chezmoi init <repo-url> --promptChoice profile=server
+chezmoi init git@github.com:Golfrey/dotfiles.git --promptChoice profile=server
+```
+
+If SSH keys are not set up yet, either add a GitHub SSH key first or use HTTPS if the repo is accessible:
+
+```sh
+chezmoi init https://github.com/Golfrey/dotfiles.git --promptChoice profile=server
+```
+
+Alternatively, clone and run the repository bootstrap script:
+
+```sh
+git clone git@github.com:Golfrey/dotfiles.git ~/.local/share/chezmoi
+CHEZMOI_PROFILE=server ~/.local/share/chezmoi/install.sh
 ```
 
 Or, if already initialized, regenerate the local chezmoi config and choose `server`:
 
 ```sh
-chezmoi init
+chezmoi init --promptChoice profile=server
 ```
 
 Check the active profile:
