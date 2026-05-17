@@ -1,0 +1,81 @@
+# Homebrew bundle for setting up a new Mac.
+# Managed by chezmoi from dot_Brewfile.tmpl.
+# Apply with: brew bundle --global
+
+{{ $profile := get . "profile" | default "personal" -}}
+{{ $isPersonal := eq $profile "personal" -}}
+{{ $isWork := eq $profile "work" -}}
+{{ $isServer := eq $profile "server" -}}
+{{ $isMinimal := eq $profile "minimal" -}}
+
+tap "homebrew/bundle"
+
+# Secret/bootstrap tools
+brew "bitwarden-cli"
+
+# Core CLI tools, useful on every machine
+brew "bat"
+brew "curl"
+brew "eza"
+brew "fd"
+brew "fzf"
+brew "gh"
+brew "git"
+brew "go"
+brew "helix"
+brew "jq"
+brew "node"
+brew "ripgrep"
+brew "tree"
+brew "uv"
+brew "wget"
+brew "zellij"
+brew "zoxide"
+
+# Container CLI
+brew "docker"
+
+# AI coding CLIs
+brew "opencode"
+brew "pi-coding-agent"
+cask "codex"
+
+{{ if $isMinimal -}}
+# Minimal profile: core CLI tools only.
+{{ else if $isServer -}}
+# Server/headless services and utilities
+brew "cliproxyapi"
+brew "transmission-cli"
+# Tailscale is installed manually from the official website on server machines.
+{{ else -}}
+# Workstation development tools
+
+# Container desktop runtime
+cask "docker-desktop"
+
+# Workstation browsers
+cask "firefox"
+cask "google-chrome"
+
+# Editors and terminals
+cask "visual-studio-code"
+cask "ghostty"
+
+# Fonts
+cask "font-jetbrains-mono-nerd-font"
+cask "font-maple-mono-nf-cn"
+
+# Productivity utilities
+cask "rectangle"
+cask "espanso"
+cask "snipaste"
+
+{{ if or $isPersonal $isWork -}}
+# IDEs
+cask "intellij-idea"
+{{ end -}}
+{{ if $isPersonal -}}
+# Personal-only apps
+cask "wechat"
+{{ end -}}
+{{ end -}}

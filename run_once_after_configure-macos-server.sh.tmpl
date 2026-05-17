@@ -1,0 +1,89 @@
+#!/bin/sh
+set -eu
+
+{{- $profile := get . "profile" | default "personal" -}}
+{{- if ne $profile "server" }}
+echo "chezmoi profile is {{ $profile }}; skipping macOS server settings."
+exit 0
+{{- end }}
+
+if [ "$(uname -s)" != "Darwin" ]; then
+  echo "Not macOS; skipping macOS server settings."
+  exit 0
+fi
+
+echo "Configuring macOS server settings..."
+echo "This may ask for your sudo password."
+sudo -v
+
+# Keep sudo alive while this script runs.
+while true; do
+  sudo -n true 2>/dev/null || exit
+  sleep 60
+  kill -0 "$$" 2>/dev/null || exit
+done &
+SUDO_KEEPALIVE_PID=$!
+trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true' EXIT INT TERM
+
+run() {
+  echo "+ $*"
+  "$@"
+}
+
+# Power/server behavior:
+# - never sleep
+# - turn display output off quickly to save energy
+# - do not spin down disks
+# - wake for network access
+# - restart automatically after power failure
+run sudo pmset -a sleep 0
+run sudo pmset -a displaysleep 1
+run sudo pmset -a disksleep 0
+run sudo pmset -a womp 1
+run sudo pmset -a autorestart 1
+
+# Enable SSH Remote Login.
+run sudo systemsetup -setremotelogin on
+
+# Enable the application firewall and stealth mode.
+if [ -x /usr/libexec/ApplicationFirewall/socketfilterfw ]; then
+  run sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate on
+  run sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode on
+fi
+
+# Automatic update policy:
+# - check for updates
+# - download updates
+# - install security responses/system data
+# - do NOT automatically install full macOS updates
+run sudo defaults write /Library/Preferences/com.apple.SoftwareUpdate AutomaticCheckEnabled -bool true
+run sudo defaults write /Library/Preferences/com.apple.SoftwareUpdate AutomaticDownload -bool true
+run sudo defaults write /Library/Preferences/com.apple.SoftwareUpdate CriticalUpdateInstall -bool true
+run sudo defaults write /Library/Preferences/com.apple.SoftwareUpdate ConfigDataInstall -bool true
+run sudo defaults write /Library/Preferences/com.apple.SoftwareUpdate AutomaticallyInstallMacOSUpdates -bool false
+
+# Optional hostname configuration. Set this before applying chezmoi if desired:
+#   export CHEZMOI_SERVER_HOSTNAME=macmini
+if [ -n "${CHEZMOI_SERVER_HOSTNAME:-}" ]; then
+  run sudo scutil --set HostName "$CHEZMOI_SERVER_HOSTNAME"
+  run sudo scutil --set LocalHostName "$CHEZMOI_SERVER_HOSTNAME"
+  run sudo scutil --set ComputerName "$CHEZMOI_SERVER_HOSTNAME"
+  run sudo dscacheutil -flushcache
+fi
+
+cat <<'EOF'
+
+macOS server baseline applied.
+
+Recommended manual follow-ups:
+  1. If this is a headless server, decide whether FileVault should be on or off.
+     FileVault improves theft protection but can block unattended boot after restart.
+  2. If using Tailscale, install the GUI app from the Tailscale website,
+     log in, and enable SSH if desired.
+  3. If you want GUI remote access, enable Screen Sharing in:
+       System Settings → General → Sharing → Screen Sharing
+  4. Reserve a static DHCP lease for this Mac mini in your router.
+
+Current power settings:
+EOF
+pmset -g

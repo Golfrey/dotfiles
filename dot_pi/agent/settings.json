@@ -1,0 +1,10 @@
+{
+  "lastChangelogVersion": "0.74.1",
+  "defaultProvider": "cliproxyapi",
+  "defaultModel": "gpt-5.5",
+  "defaultThinkingLevel": "xhigh",
+  "packages": [
+    "npm:pi-web-access",
+    "npm:pi-powerline-footer"
+  ]
+}

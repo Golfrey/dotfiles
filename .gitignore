@@ -1,0 +1,22 @@
+.DS_Store
+
+# Secrets and local environment files.
+**/.env
+**/dot_env
+**/*.env
+**/*.key
+**/*.pem
+**/*.p12
+**/*.pfx
+
+# Avoid accidentally committing SSH keys. Manage SSH config deliberately later.
+dot_ssh/
+private_dot_ssh/
+
+# App configs that currently contain credentials or local state.
+dot_config/opencode/
+dot_config/last30days/
+
+# Dependencies and generated caches do not belong in dotfiles.
+**/node_modules/
+**/.cache/
