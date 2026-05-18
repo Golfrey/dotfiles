@@ -72,13 +72,20 @@ Alternatively, clone the repo and run the bootstrap script from the checkout:
 
 ```sh
 git clone git@github.com:Golfrey/dotfiles.git ~/.local/share/chezmoi
+~/.local/share/chezmoi/install.sh server
+```
+
+If no profile is passed, `install.sh` prompts for one interactively. You can also use `--profile` or `CHEZMOI_PROFILE`:
+
+```sh
+~/.local/share/chezmoi/install.sh --profile server
 CHEZMOI_PROFILE=server ~/.local/share/chezmoi/install.sh
 ```
 
 `install.sh` intentionally runs `chezmoi init` without applying by default, so you can review the diff first. To apply immediately, pass `--apply`:
 
 ```sh
-CHEZMOI_PROFILE=server ~/.local/share/chezmoi/install.sh --apply
+~/.local/share/chezmoi/install.sh server --apply
 ```
 
 The profile is stored in the machine-local chezmoi config generated from `home/.chezmoi.toml.tmpl`.
@@ -135,7 +142,7 @@ chezmoi execute-template --override-data-file /tmp/chezmoi-data.json < home/dot_
 
 ## Externals
 
-Oh My Zsh and Powerlevel10k are managed by chezmoi externals in:
+Oh My Zsh, Powerlevel10k, and server-profile CPA Usage Keeper releases are managed by chezmoi externals in:
 
 ```text
 home/.chezmoiexternal.toml
@@ -153,6 +160,44 @@ Force-refresh externals:
 chezmoi apply --refresh-externals=always
 ```
 
+## CPA Usage Keeper
+
+For the `server` profile on macOS server hosts, chezmoi installs CPA Usage Keeper from GitHub Releases into:
+
+```text
+~/.local/share/cpa-usage-keeper
+```
+
+Additional managed files:
+
+```text
+~/.config/cpa-usage-keeper/env
+~/.local/bin/cpa-usage-keeper
+~/Library/LaunchAgents/com.golfrey.cpa-usage-keeper.plist
+```
+
+The env file is private (`0600`) and reads the CPA management key from the Bitwarden item `CliProxyAPI Management Key` unless `CPA_USAGE_KEEPER_CPA_MANAGEMENT_KEY` is set while applying chezmoi.
+
+If Bitwarden is locked, unlock it before applying or provide the management key directly:
+
+```sh
+export BW_SESSION="$(bw unlock --raw)"
+# or:
+CPA_USAGE_KEEPER_CPA_MANAGEMENT_KEY=... chezmoi apply
+```
+
+The service is configured with TLS enabled. Open the dashboard at:
+
+```text
+https://home-server-m4.taila3a41d.ts.net:8080
+```
+
+On macOS server machines, the LaunchAgent is loaded by a `run_onchange` script after apply. Check it with:
+
+```sh
+launchctl print gui/$(id -u)/com.golfrey.cpa-usage-keeper
+```
+
 ## Pi / CliproxyAPI
 
 Pi model config is managed in:
@@ -161,10 +206,10 @@ Pi model config is managed in:
 home/dot_pi/agent/models.json.tmpl
 ```
 
-It uses the MagicDNS host:
+It uses the Tailscale HTTPS endpoint:
 
 ```text
-http://home-server-m4:8317/v1
+https://home-server-m4.taila3a41d.ts.net:8317/v1
 ```
 
 ## Mac mini server

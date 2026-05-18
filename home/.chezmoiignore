@@ -9,3 +9,26 @@ install.sh
 .config/opencode/**
 .config/last30days
 .config/last30days/**
+
+# Runtime-generated Oh My Zsh/Powerlevel10k caches and compiled zsh wordcode.
+.oh-my-zsh/cache
+.oh-my-zsh/cache/**
+.oh-my-zsh/custom/themes/powerlevel10k/*.zwc
+.oh-my-zsh/custom/themes/powerlevel10k/**/*.zwc
+
+{{- $profile := get . "profile" | default "personal" }}
+{{- $cpaUsageKeeperSupported := and (eq $profile "server") (eq .chezmoi.os "darwin") (or (eq .chezmoi.arch "amd64") (eq .chezmoi.arch "arm64")) }}
+{{- if not $cpaUsageKeeperSupported }}
+# CPA Usage Keeper is only installed on supported macOS server machines.
+.config/cpa-usage-keeper
+.config/cpa-usage-keeper/**
+.local/bin/cpa-usage-keeper
+.local/share/cpa-usage-keeper
+.local/share/cpa-usage-keeper/**
+Library/LaunchAgents/com.golfrey.cpa-usage-keeper.plist
+load-cpa-usage-keeper-launchagent.sh
+configure-cpa-usage-keeper-systemd.sh
+{{- else }}
+# Linux systemd integration is not managed for this macOS server setup.
+configure-cpa-usage-keeper-systemd.sh
+{{- end }}

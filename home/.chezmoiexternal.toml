@@ -11,3 +11,14 @@ url = "https://github.com/romkatv/powerlevel10k/archive/master.tar.gz"
 exact = true
 stripComponents = 1
 refreshPeriod = "168h"
+
+{{- $profile := get . "profile" | default "personal" -}}
+{{- if and (eq $profile "server") (eq .chezmoi.os "darwin") (or (eq .chezmoi.arch "amd64") (eq .chezmoi.arch "arm64")) }}
+# CPA Usage Keeper release package. Keep exact=false so local .env and runtime data survive updates.
+[".local/share/cpa-usage-keeper"]
+type = "archive"
+url = {{ gitHubLatestReleaseAssetURL "Willxup/cpa-usage-keeper" (printf "cpa-usage-keeper_*_%s_%s.tar.gz" .chezmoi.os .chezmoi.arch) | quote }}
+exact = false
+stripComponents = 1
+refreshPeriod = "168h"
+{{- end }}

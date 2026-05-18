@@ -1,0 +1,39 @@
+# CPA Usage Keeper configuration.
+# Managed by chezmoi from home/dot_config/cpa-usage-keeper/private_env.tmpl.
+# See: https://github.com/Willxup/cpa-usage-keeper
+
+CPA_BASE_URL=https://127.0.0.1:8317
+CPA_MANAGEMENT_KEY={{ if env "CPA_USAGE_KEEPER_CPA_MANAGEMENT_KEY" }}{{ env "CPA_USAGE_KEEPER_CPA_MANAGEMENT_KEY" | quote }}{{ else }}{{ (bitwarden "item" "CliProxyAPI Management Key").login.password | quote }}{{ end }}
+
+AUTH_ENABLED=false
+LOGIN_PASSWORD=
+AUTH_SESSION_TTL=168h
+
+APP_PORT=8080
+APP_BASE_PATH=
+TZ=America/New_York
+
+REDIS_QUEUE_ADDR=
+REDIS_QUEUE_TLS=true
+REDIS_QUEUE_BATCH_SIZE=1000
+REDIS_QUEUE_IDLE_INTERVAL=1s
+REQUEST_TIMEOUT=30s
+TLS_SKIP_VERIFY=true
+
+WORK_DIR={{ joinPath .chezmoi.homeDir ".local" "state" "cpa-usage-keeper" }}
+LOG_LEVEL=info
+LOG_FILE_ENABLED=true
+LOG_RETENTION_DAYS=7
+BACKUP_ENABLED=true
+BACKUP_INTERVAL=24h
+BACKUP_RETENTION_DAYS=7
+
+{{- if eq .chezmoi.os "darwin" }}
+TLS_ENABLED=true
+TLS_CERT_FILE=/opt/homebrew/etc/cliproxyapi/home-server-m4.taila3a41d.ts.net.crt
+TLS_KEY_FILE=/opt/homebrew/etc/cliproxyapi/home-server-m4.taila3a41d.ts.net.key
+{{- else }}
+TLS_ENABLED=false
+TLS_CERT_FILE=
+TLS_KEY_FILE=
+{{- end }}

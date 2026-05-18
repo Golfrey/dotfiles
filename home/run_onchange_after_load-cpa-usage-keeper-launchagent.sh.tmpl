@@ -1,0 +1,31 @@
+#!/bin/sh
+set -eu
+
+{{- $profile := get . "profile" | default "personal" -}}
+{{- $supported := and (eq $profile "server") (eq .chezmoi.os "darwin") (or (eq .chezmoi.arch "amd64") (eq .chezmoi.arch "arm64")) -}}
+{{- if not $supported }}
+echo "chezmoi profile is {{ $profile }} on {{ .chezmoi.os }}/{{ .chezmoi.arch }}; skipping CPA Usage Keeper launch agent."
+exit 0
+{{- end }}
+{{- $assetURL := gitHubLatestReleaseAssetURL "Willxup/cpa-usage-keeper" (printf "cpa-usage-keeper_*_%s_%s.tar.gz" .chezmoi.os .chezmoi.arch) }}
+{{- $envTemplateSource := include "dot_config/cpa-usage-keeper/private_env.tmpl" }}
+
+# Restart trigger for chezmoi run_onchange: these comments change when the
+# latest CPA Usage Keeper release asset or managed env template changes, so
+# this after-script runs after updates and restarts the service.
+# cpa-usage-keeper-release-asset: {{ $assetURL }}
+# cpa-usage-keeper-env-template-sha256: {{ $envTemplateSource | sha256sum }}
+
+plist="$HOME/Library/LaunchAgents/com.golfrey.cpa-usage-keeper.plist"
+service="gui/$(id -u)/com.golfrey.cpa-usage-keeper"
+
+if [ ! -f "$plist" ]; then
+  echo "CPA Usage Keeper LaunchAgent plist not found: $plist"
+  exit 0
+fi
+
+# Reload after the plist or this script changes. Ignore failures when the service was not loaded yet.
+launchctl bootout "gui/$(id -u)" "$plist" 2>/dev/null || launchctl bootout "$service" 2>/dev/null || true
+launchctl bootstrap "gui/$(id -u)" "$plist"
+launchctl enable "$service"
+launchctl kickstart -k "$service"

@@ -1,0 +1,42 @@
+#!/bin/sh
+set -eu
+
+{{- $profile := get . "profile" | default "personal" -}}
+{{- $supported := and (eq $profile "server") (eq .chezmoi.os "linux") (or (eq .chezmoi.arch "amd64") (eq .chezmoi.arch "arm64")) -}}
+{{- if not $supported }}
+echo "chezmoi profile is {{ $profile }} on {{ .chezmoi.os }}/{{ .chezmoi.arch }}; skipping CPA Usage Keeper systemd service."
+exit 0
+{{- end }}
+{{- $assetURL := gitHubLatestReleaseAssetURL "Willxup/cpa-usage-keeper" (printf "cpa-usage-keeper_*_%s_%s.tar.gz" .chezmoi.os .chezmoi.arch) }}
+{{- $envTemplateSource := include "dot_config/cpa-usage-keeper/private_env.tmpl" }}
+
+# Restart trigger for chezmoi run_onchange: these comments change when the
+# latest CPA Usage Keeper release asset or managed env template changes, so
+# this after-script runs after updates and restarts the service.
+# cpa-usage-keeper-release-asset: {{ $assetURL }}
+# cpa-usage-keeper-env-template-sha256: {{ $envTemplateSource | sha256sum }}
+
+unit_source="$HOME/.local/share/cpa-usage-keeper/cpa-usage-keeper.service"
+unit_target="/etc/systemd/system/cpa-usage-keeper.service"
+install_dir="$HOME/.local/share/cpa-usage-keeper"
+env_file="$HOME/.config/cpa-usage-keeper/env"
+
+if [ ! -f "$unit_source" ]; then
+  echo "CPA Usage Keeper systemd unit not found: $unit_source"
+  exit 0
+fi
+
+if [ ! -f "$env_file" ]; then
+  echo "CPA Usage Keeper env file not found: $env_file"
+  exit 0
+fi
+
+echo "Installing CPA Usage Keeper systemd service..."
+sudo -v
+sudo cp "$unit_source" "$unit_target"
+sudo sed -i "s|__CPA_USAGE_KEEPER_DIR__|$install_dir|g" "$unit_target"
+# Use chezmoi-managed config rather than a package-local .env.
+sudo sed -i "s|ExecStart=/bin/sh -c 'exec ./cpa-usage-keeper'|ExecStart=/bin/sh -c 'exec ./cpa-usage-keeper -env $env_file'|g" "$unit_target"
+sudo systemctl daemon-reload
+sudo systemctl enable cpa-usage-keeper
+sudo systemctl restart cpa-usage-keeper
