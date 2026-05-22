@@ -4,16 +4,19 @@ set -eu
 
 usage() {
   cat <<EOF
-Usage: ${0##*/} [profile] [chezmoi init flags]
-       ${0##*/} --profile profile [chezmoi init flags]
-       CHEZMOI_PROFILE=profile ${0##*/} [chezmoi init flags]
+Usage: ${0##*/} [profile] [--no-apply] [chezmoi init flags]
+       ${0##*/} --profile profile [--no-apply] [chezmoi init flags]
+       CHEZMOI_PROFILE=profile ${0##*/} [--no-apply] [chezmoi init flags]
 
 Profiles: personal, work, server, minimal
 
+By default this runs 'chezmoi init --apply'. Use --no-apply to only initialize
+chezmoi so you can review the diff before applying.
+
 Examples:
   ${0##*/} server
-  ${0##*/} --profile server --apply
-  CHEZMOI_PROFILE=server ${0##*/} --apply
+  ${0##*/} --profile server --no-apply
+  CHEZMOI_PROFILE=server ${0##*/}
 EOF
 }
 
@@ -76,37 +79,81 @@ EOF
 }
 
 profile="${CHEZMOI_PROFILE:-}"
+apply=1
+can_take_bare_profile=1
 
-case "${1:-}" in
-  -h|--help)
-    usage
-    exit 0
-    ;;
-  --profile)
-    if [ "$#" -lt 2 ]; then
-      echo "--profile requires an argument." >&2
-      usage >&2
-      exit 2
-    fi
-    profile="$2"
-    shift 2
-    ;;
-  --profile=*)
-    profile="${1#--profile=}"
-    shift
-    ;;
-  personal|work|server|minimal)
-    profile="$1"
-    shift
-    ;;
-  -*|'')
-    ;;
-  *)
-    echo "Invalid profile: $1" >&2
-    echo "Valid profiles: personal, work, server, minimal" >&2
-    exit 2
-    ;;
-esac
+# Parse bootstrap-script options while preserving any remaining chezmoi init
+# flags exactly in "$@". A bare profile is accepted only before passthrough
+# chezmoi flags, avoiding accidental consumption of flag values such as
+# '--branch server'.
+argc=$#
+while [ "$argc" -gt 0 ]; do
+  arg=$1
+  shift
+  argc=$((argc - 1))
+
+  case "$arg" in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --profile)
+      if [ "$argc" -lt 1 ]; then
+        echo "--profile requires an argument." >&2
+        usage >&2
+        exit 2
+      fi
+      profile=$1
+      shift
+      argc=$((argc - 1))
+      can_take_bare_profile=0
+      ;;
+    --profile=*)
+      profile=${arg#--profile=}
+      can_take_bare_profile=0
+      ;;
+    -a|--apply|--apply=true)
+      apply=1
+      ;;
+    --no-apply|--apply=false)
+      apply=0
+      ;;
+    personal|work|server|minimal)
+      if [ "$can_take_bare_profile" -eq 1 ]; then
+        profile=$arg
+        can_take_bare_profile=0
+      else
+        set -- "$@" "$arg"
+      fi
+      ;;
+    --)
+      set -- "$@" "$arg"
+      while [ "$argc" -gt 0 ]; do
+        arg=$1
+        shift
+        argc=$((argc - 1))
+        set -- "$@" "$arg"
+      done
+      break
+      ;;
+    *)
+      case "$arg" in
+        -*)
+          set -- "$@" "$arg"
+          can_take_bare_profile=0
+          ;;
+        *)
+          if [ "$can_take_bare_profile" -eq 1 ]; then
+            echo "Invalid profile: $arg" >&2
+            echo "Valid profiles: personal, work, server, minimal" >&2
+            exit 2
+          fi
+          set -- "$@" "$arg"
+          ;;
+      esac
+      ;;
+  esac
+done
 
 if [ -z "$profile" ]; then
   prompt_for_profile
@@ -138,5 +185,10 @@ fi
 # POSIX way to get this script's directory.
 script_dir="$(CDPATH= cd -P -- "$(dirname -- "$0")" && pwd -P)"
 
-echo "Initializing chezmoi with profile: $profile"
+if [ "$apply" -eq 1 ]; then
+  echo "Initializing and applying chezmoi with profile: $profile"
+  exec "$chezmoi" init "--source=$script_dir" --promptChoice "profile=$profile" --apply "$@"
+fi
+
+echo "Initializing chezmoi with profile: $profile (--no-apply)"
 exec "$chezmoi" init "--source=$script_dir" --promptChoice "profile=$profile" "$@"

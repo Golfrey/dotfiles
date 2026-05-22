@@ -58,14 +58,14 @@ Or let `install.sh` install chezmoi into `~/.local/bin` if it is missing.
 Direct chezmoi init over SSH:
 
 ```sh
-chezmoi init git@github.com:Golfrey/dotfiles.git --promptChoice profile=personal
-chezmoi init git@github.com:Golfrey/dotfiles.git --promptChoice profile=server
+chezmoi init git@github.com:Golfrey/dotfiles.git --promptChoice profile=personal --apply
+chezmoi init git@github.com:Golfrey/dotfiles.git --promptChoice profile=server --apply
 ```
 
 If SSH keys are not set up and the repo is accessible over HTTPS:
 
 ```sh
-chezmoi init https://github.com/Golfrey/dotfiles.git --promptChoice profile=server
+chezmoi init https://github.com/Golfrey/dotfiles.git --promptChoice profile=server --apply
 ```
 
 Alternatively, clone the repo and run the bootstrap script from the checkout:
@@ -75,17 +75,19 @@ git clone git@github.com:Golfrey/dotfiles.git ~/.local/share/chezmoi
 ~/.local/share/chezmoi/install.sh server
 ```
 
-If no profile is passed, `install.sh` prompts for one interactively. You can also use `--profile` or `CHEZMOI_PROFILE`:
+`install.sh` runs `chezmoi init --apply` by default. If no profile is passed, it prompts for one interactively. If Bitwarden is not ready yet, use `--no-apply`, prepare Bitwarden, then apply in step 5. You can also use `--profile` or `CHEZMOI_PROFILE`:
 
 ```sh
 ~/.local/share/chezmoi/install.sh --profile server
 CHEZMOI_PROFILE=server ~/.local/share/chezmoi/install.sh
 ```
 
-`install.sh` intentionally runs `chezmoi init` without applying by default, so you can review the diff first. To apply immediately, pass `--apply`:
+To initialize only and review the diff before applying, pass `--no-apply`:
 
 ```sh
-~/.local/share/chezmoi/install.sh server --apply
+~/.local/share/chezmoi/install.sh server --no-apply
+chezmoi diff
+chezmoi apply
 ```
 
 The profile is stored in the machine-local chezmoi config generated from `home/.chezmoi.toml.tmpl`.
@@ -105,7 +107,10 @@ chezmoi data | grep '"profile"'
 
 ### 4. Prepare Bitwarden CLI if applying secret-backed templates
 
-Some templates read secrets from Bitwarden. Before applying those templates on a fresh machine:
+Some templates read secrets from Bitwarden. Before running any command that
+applies on a fresh machine (`chezmoi init --apply`, `install.sh` without
+`--no-apply`, or `chezmoi apply`), make sure the Bitwarden CLI is installed and
+`BW_SESSION` is set:
 
 ```sh
 brew install bitwarden-cli
@@ -113,15 +118,30 @@ bw login
 export BW_SESSION="$(bw unlock --raw)"
 ```
 
-### 5. Apply dotfiles and install packages
+After these dotfiles are applied, use `bw-unlock` instead. It logs in if needed,
+unlocks the vault, exports `BW_SESSION` for the current shell, and caches the
+session token in the macOS Keychain so new zsh sessions can reuse it. Use
+`bw-session` to inspect the cache and `bw-lock` or `bw-session-clear` to remove
+it.
+
+### 5. Apply dotfiles if needed and install packages
+
+If you initialized with `--no-apply`, apply after Bitwarden is ready:
 
 ```sh
 chezmoi diff
 chezmoi apply
-brew bundle --global
+```
+
+Then install packages:
+
+```sh
+HOMEBREW_NO_AUTO_UPDATE=1 brew bundle --global --no-upgrade --jobs=auto
 ```
 
 `home/dot_Brewfile.tmpl` renders to `~/.Brewfile`. Homebrew Bundle then installs packages from that file.
+
+On servers, prefer `HOMEBREW_NO_AUTO_UPDATE=1 --no-upgrade --jobs=auto` for first setup. `HOMEBREW_NO_AUTO_UPDATE=1` avoids a slow Homebrew metadata update, `--no-upgrade` avoids spending a long time upgrading already-installed packages, and `--jobs=auto` parallelizes independent installs.
 
 ## Homebrew packages
 
@@ -181,6 +201,8 @@ The env file is private (`0600`) and reads the CPA management key from the Bitwa
 If Bitwarden is locked, unlock it before applying or provide the management key directly:
 
 ```sh
+bw-unlock
+# or, before bw-unlock has been installed by these dotfiles:
 export BW_SESSION="$(bw unlock --raw)"
 # or:
 CPA_USAGE_KEEPER_CPA_MANAGEMENT_KEY=... chezmoi apply

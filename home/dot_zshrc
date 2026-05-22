@@ -84,6 +84,9 @@ export ZSH_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/oh-my-zsh"
 
 source $ZSH/oh-my-zsh.sh
 
+# Bitwarden CLI session helpers.
+[[ ! -f "$HOME/.config/zsh/bitwarden.zsh" ]] || source "$HOME/.config/zsh/bitwarden.zsh"
+
 # User configuration
 
 # export MANPATH="/usr/local/man:$MANPATH"

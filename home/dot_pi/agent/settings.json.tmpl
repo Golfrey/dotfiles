@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.74.1",
+  "lastChangelogVersion": {{ if lookPath "pi" }}{{ output "sh" "-c" "pi --version 2>&1" | trim | quote }}{{ else }}"0.74.1"{{ end }},
   "defaultProvider": "cliproxyapi",
   "defaultModel": "gpt-5.5",
   "defaultThinkingLevel": "xhigh",

@@ -15,13 +15,13 @@ It runs only when the chezmoi profile is `server`.
 On the Mac mini:
 
 ```sh
-chezmoi init git@github.com:Golfrey/dotfiles.git --promptChoice profile=server
+chezmoi init git@github.com:Golfrey/dotfiles.git --promptChoice profile=server --apply
 ```
 
 If SSH keys are not set up yet, either add a GitHub SSH key first or use HTTPS if the repo is accessible:
 
 ```sh
-chezmoi init https://github.com/Golfrey/dotfiles.git --promptChoice profile=server
+chezmoi init https://github.com/Golfrey/dotfiles.git --promptChoice profile=server --apply
 ```
 
 Alternatively, clone and run the repository bootstrap script:
@@ -31,17 +31,25 @@ git clone git@github.com:Golfrey/dotfiles.git ~/.local/share/chezmoi
 ~/.local/share/chezmoi/install.sh server
 ```
 
-If you omit `server`, the script prompts for a profile interactively. You can also run:
+`install.sh` runs `chezmoi init --apply` by default. If you omit `server`, the script prompts for a profile interactively. If Bitwarden is not ready yet, use `--no-apply`, prepare Bitwarden, then apply. You can also run:
 
 ```sh
 ~/.local/share/chezmoi/install.sh --profile server
 CHEZMOI_PROFILE=server ~/.local/share/chezmoi/install.sh
 ```
 
+To initialize only and review the diff before applying, pass `--no-apply`:
+
+```sh
+~/.local/share/chezmoi/install.sh server --no-apply
+chezmoi diff
+chezmoi apply
+```
+
 Or, if already initialized, regenerate the local chezmoi config and choose `server`:
 
 ```sh
-chezmoi init --promptChoice profile=server
+chezmoi init --promptChoice profile=server --apply
 ```
 
 Check the active profile:
@@ -56,7 +64,7 @@ Optional: set a hostname before applying:
 export CHEZMOI_SERVER_HOSTNAME=macmini
 ```
 
-Then apply:
+If you initialized with `--no-apply`, apply after Bitwarden is ready:
 
 ```sh
 chezmoi diff
@@ -81,8 +89,10 @@ The server setup script configures:
 After `chezmoi apply`, install the server Homebrew bundle:
 
 ```sh
-brew bundle --global
+HOMEBREW_NO_AUTO_UPDATE=1 brew bundle --global --no-upgrade --jobs=auto
 ```
+
+`HOMEBREW_NO_AUTO_UPDATE=1` avoids a slow Homebrew metadata update. `--no-upgrade` keeps setup focused on missing packages instead of upgrading everything already installed. `--jobs=auto` lets Homebrew install independent formulae in parallel.
 
 For the `server` profile, the Brewfile includes server/headless packages such as:
 
@@ -234,6 +244,11 @@ export BW_SESSION="$(bw unlock --raw)"
 chezmoi apply
 ```
 
+After these dotfiles are applied, use `bw-unlock` instead. It logs in if needed,
+unlocks the vault, exports `BW_SESSION` for the current shell, and saves the
+session token in the macOS Keychain for new zsh sessions. Use `bw-session` to
+inspect the cache and `bw-lock` or `bw-session-clear` to remove it.
+
 The Bitwarden item currently used for CliProxyAPI is:
 
 ```text
@@ -276,6 +291,8 @@ Managed paths:
 Before applying, unlock Bitwarden or provide the key directly:
 
 ```sh
+bw-unlock
+# or, before bw-unlock has been installed by these dotfiles:
 export BW_SESSION="$(bw unlock --raw)"
 # or:
 export CPA_USAGE_KEEPER_CPA_MANAGEMENT_KEY="..."
@@ -303,7 +320,7 @@ Avoid relying on a GUI login session for server processes where possible.
 - [ ] Optionally set `CHEZMOI_SERVER_HOSTNAME`.
 - [ ] Unlock Bitwarden CLI if applying secret-backed templates.
 - [ ] Run `chezmoi apply`.
-- [ ] Run `brew bundle --global`.
+- [ ] Run `HOMEBREW_NO_AUTO_UPDATE=1 brew bundle --global --no-upgrade --jobs=auto`.
 - [ ] Install Tailscale GUI from the official website.
 - [ ] Log in to Tailscale and enable Tailscale SSH if desired.
 - [ ] Decide FileVault on/off.

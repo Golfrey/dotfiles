@@ -1,14 +1,12 @@
 # Homebrew bundle for setting up a new Mac.
 # Managed by chezmoi from home/dot_Brewfile.tmpl.
-# Apply with: brew bundle --global
+# Apply with: HOMEBREW_NO_AUTO_UPDATE=1 brew bundle --global --no-upgrade --jobs=auto
 
 {{ $profile := get . "profile" | default "personal" -}}
 {{ $isPersonal := eq $profile "personal" -}}
 {{ $isWork := eq $profile "work" -}}
 {{ $isServer := eq $profile "server" -}}
 {{ $isMinimal := eq $profile "minimal" -}}
-
-tap "homebrew/bundle"
 
 # Secret/bootstrap tools
 brew "bitwarden-cli"
@@ -71,10 +69,6 @@ cask "rectangle"
 cask "espanso"
 cask "snipaste"
 
-{{ if or $isPersonal $isWork -}}
-# IDEs
-cask "intellij-idea"
-{{ end -}}
 {{ if $isPersonal -}}
 # Personal-only apps
 cask "wechat"
