@@ -39,6 +39,9 @@ brew "opencode"
 brew "pi-coding-agent"
 cask "codex"
 
+# Text expansion
+cask "espanso"
+
 {{ if $isMinimal -}}
 # Minimal profile: core CLI tools only.
 {{ else if $isServer -}}
@@ -66,7 +69,6 @@ cask "font-maple-mono-nf-cn"
 
 # Productivity utilities
 cask "rectangle"
-cask "espanso"
 cask "snipaste"
 
 {{ if $isPersonal -}}
