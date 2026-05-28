@@ -1,7 +1,7 @@
 {
   "providers": {
     "cliproxyapi": {
-      "baseUrl": "https://home-server-m4.taila3a41d.ts.net:8317/v1",
+      "baseUrl": "http://localhost:8317/v1",
       "api": "openai-completions",
       "apiKey": {{ (bitwarden "item" "CliProxyAPI Key").login.password | quote }},
       "models": [
