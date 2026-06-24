@@ -89,6 +89,9 @@ source $ZSH/oh-my-zsh.sh
 # Bitwarden CLI session helpers.
 [[ ! -f "$HOME/.config/zsh/bitwarden.zsh" ]] || source "$HOME/.config/zsh/bitwarden.zsh"
 
+# Git worktree helpers.
+[[ ! -f "$HOME/.config/zsh/worktree.zsh" ]] || source "$HOME/.config/zsh/worktree.zsh"
+
 # User configuration
 
 # export MANPATH="/usr/local/man:$MANPATH"
