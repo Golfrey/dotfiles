@@ -46,6 +46,7 @@ cask "espanso"
 # Minimal profile: core CLI tools only.
 {{ else if $isServer -}}
 # Server/headless services and utilities
+brew "caddy"
 brew "cliproxyapi"
 brew "transmission-cli"
 # Tailscale is installed manually from the official website on server machines.

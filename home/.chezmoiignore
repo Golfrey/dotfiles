@@ -15,3 +15,12 @@ install.sh
 .oh-my-zsh/cache/**
 .oh-my-zsh/custom/themes/powerlevel10k/*.zwc
 .oh-my-zsh/custom/themes/powerlevel10k/**/*.zwc
+
+{{- $profile := get . "profile" | default "personal" }}
+{{- $serverDarwin := and (eq $profile "server") (eq .chezmoi.os "darwin") }}
+{{- if not $serverDarwin }}
+# Caddy configuration is only installed on macOS server machines.
+.config/caddy
+.config/caddy/**
+reload-caddy.sh
+{{- end }}

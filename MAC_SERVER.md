@@ -96,6 +96,7 @@ HOMEBREW_NO_AUTO_UPDATE=1 brew bundle --global --no-upgrade --jobs=auto
 
 For the `server` profile, the Brewfile includes server/headless packages such as:
 
+- `caddy`
 - `cliproxyapi`
 - `transmission-cli`
 

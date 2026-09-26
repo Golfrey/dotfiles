@@ -1,0 +1,52 @@
+#!/bin/sh
+set -eu
+
+{{- $profile := get . "profile" | default "personal" -}}
+{{- $supported := and (eq $profile "server") (eq .chezmoi.os "darwin") -}}
+{{- if not $supported }}
+echo "chezmoi profile is {{ $profile }} on {{ .chezmoi.os }}; skipping Caddy reload."
+exit 0
+{{- end }}
+{{- $caddyfileSource := include "dot_config/private_caddy/Caddyfile.tmpl" }}
+
+# Reload trigger for chezmoi run_onchange: this comment changes when the
+# managed Caddyfile template changes.
+# caddyfile-sha256: {{ $caddyfileSource | sha256sum }}
+
+source_caddyfile="$HOME/.config/caddy/Caddyfile"
+
+if ! command -v caddy >/dev/null 2>&1; then
+  echo "Caddy is not installed; skipping reload."
+  exit 0
+fi
+
+if [ ! -f "$source_caddyfile" ]; then
+  echo "Managed Caddyfile not found: $source_caddyfile"
+  exit 0
+fi
+
+caddyfile="$(brew --prefix)/etc/Caddyfile"
+
+sudo mkdir -p "$(dirname "$caddyfile")"
+sudo cp "$source_caddyfile" "$caddyfile"
+sudo chown root:wheel "$caddyfile" 2>/dev/null || true
+sudo chmod 0644 "$caddyfile"
+
+caddy validate --config "$caddyfile"
+
+# Prefer a live reload when Caddy is already running. This also handles
+# manually-started Caddy processes that are not registered in `brew services`.
+if pgrep -x caddy >/dev/null 2>&1 && caddy reload --config "$caddyfile"; then
+  exit 0
+fi
+
+if brew services list 2>/dev/null | grep -q '^caddy[[:space:]].*started'; then
+  if brew services list 2>/dev/null | grep -q '^caddy[[:space:]].*root'; then
+    sudo brew services restart caddy
+  else
+    brew services restart caddy
+  fi
+else
+  # Server profile expects Caddy as a root service so it can bind :443.
+  sudo brew services start caddy
+fi

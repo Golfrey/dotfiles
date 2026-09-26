@@ -1,0 +1,42 @@
+{{- $profile := get . "profile" | default "personal" -}}
+{{- if eq $profile "server" -}}
+home-server-m4.taila3a41d.ts.net {
+	bind 100.118.152.92 [fd7a:115c:a1e0::3601:989a]
+
+	handle /cliproxyapi {
+		redir /cliproxyapi/management.html 308
+	}
+
+	handle /cliproxyapi/ {
+		redir /cliproxyapi/management.html 308
+	}
+
+	handle_path /cliproxyapi/* {
+		reverse_proxy http://127.0.0.1:8317
+	}
+
+	handle /v0/management/* {
+		reverse_proxy http://127.0.0.1:8317
+	}
+
+	handle /sonarr/* {
+		reverse_proxy http://127.0.0.1:8989
+	}
+
+	handle /radarr/* {
+		reverse_proxy http://127.0.0.1:7878
+	}
+
+	handle /prowlarr/* {
+		reverse_proxy http://127.0.0.1:9696
+	}
+
+	handle /jellyfin/* {
+		reverse_proxy http://127.0.0.1:8096
+	}
+
+	handle {
+		respond "home-server-m4 Caddy is running" 200
+	}
+}
+{{- end }}

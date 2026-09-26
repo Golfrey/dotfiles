@@ -180,6 +180,10 @@ Force-refresh externals:
 chezmoi apply --refresh-externals=always
 ```
 
+## Caddy
+
+Caddy config is staged under `~/.config/caddy/Caddyfile`, copied to `$(brew --prefix)/etc/Caddyfile`, validated, and reloaded by `reload-caddy.sh` after apply.
+
 ## Pi / CliproxyAPI
 
 Pi model config is managed in:
