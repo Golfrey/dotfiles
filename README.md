@@ -162,7 +162,7 @@ chezmoi execute-template --override-data-file /tmp/chezmoi-data.json < home/dot_
 
 ## Externals
 
-Oh My Zsh, Powerlevel10k, and server-profile CPA Usage Keeper releases are managed by chezmoi externals in:
+Oh My Zsh and Powerlevel10k are managed by chezmoi externals in:
 
 ```text
 home/.chezmoiexternal.toml
@@ -178,46 +178,6 @@ Force-refresh externals:
 
 ```sh
 chezmoi apply --refresh-externals=always
-```
-
-## CPA Usage Keeper
-
-For the `server` profile on macOS server hosts, chezmoi installs CPA Usage Keeper from GitHub Releases into:
-
-```text
-~/.local/share/cpa-usage-keeper
-```
-
-Additional managed files:
-
-```text
-~/.config/cpa-usage-keeper/env
-~/.local/bin/cpa-usage-keeper
-~/Library/LaunchAgents/com.golfrey.cpa-usage-keeper.plist
-```
-
-The env file is private (`0600`) and reads the CPA management key from the Bitwarden item `CliProxyAPI Management Key` unless `CPA_USAGE_KEEPER_CPA_MANAGEMENT_KEY` is set while applying chezmoi.
-
-If Bitwarden is locked, unlock it before applying or provide the management key directly:
-
-```sh
-bw-unlock
-# or, before bw-unlock has been installed by these dotfiles:
-export BW_SESSION="$(bw unlock --raw)"
-# or:
-CPA_USAGE_KEEPER_CPA_MANAGEMENT_KEY=... chezmoi apply
-```
-
-The service is configured with TLS enabled. Open the dashboard at:
-
-```text
-https://home-server-m4.taila3a41d.ts.net:8080
-```
-
-On macOS server machines, the LaunchAgent is loaded by a `run_onchange` script after apply. Check it with:
-
-```sh
-launchctl print gui/$(id -u)/com.golfrey.cpa-usage-keeper
 ```
 
 ## Pi / CliproxyAPI

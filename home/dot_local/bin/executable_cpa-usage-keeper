@@ -1,4 +1,0 @@
-#!/bin/sh
-set -eu
-
-exec "$HOME/.local/share/cpa-usage-keeper/cpa-usage-keeper" "$@"

@@ -271,47 +271,6 @@ Start a Homebrew service:
 brew services start <service>
 ```
 
-### CPA Usage Keeper
-
-For the `server` profile, chezmoi manages CPA Usage Keeper as an external release package from:
-
-```text
-https://github.com/Willxup/cpa-usage-keeper
-```
-
-Managed paths:
-
-```text
-~/.local/share/cpa-usage-keeper
-~/.config/cpa-usage-keeper/env
-~/.local/bin/cpa-usage-keeper
-~/Library/LaunchAgents/com.golfrey.cpa-usage-keeper.plist
-```
-
-Before applying, unlock Bitwarden or provide the key directly:
-
-```sh
-bw-unlock
-# or, before bw-unlock has been installed by these dotfiles:
-export BW_SESSION="$(bw unlock --raw)"
-# or:
-export CPA_USAGE_KEEPER_CPA_MANAGEMENT_KEY="..."
-```
-
-The env file reads the CPA management key from the Bitwarden item `CliProxyAPI Management Key` unless `CPA_USAGE_KEEPER_CPA_MANAGEMENT_KEY` is set while applying chezmoi.
-
-After `chezmoi apply`, the LaunchAgent should be loaded automatically. Check it with:
-
-```sh
-launchctl print gui/$(id -u)/com.golfrey.cpa-usage-keeper
-```
-
-Open the dashboard at:
-
-```text
-https://home-server-m4.taila3a41d.ts.net:8080
-```
-
 Avoid relying on a GUI login session for server processes where possible.
 
 ## 12. Quick checklist
